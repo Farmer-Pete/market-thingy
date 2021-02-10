@@ -224,6 +224,7 @@ class Facts(_Exportable):
             'us-gaap_InterestExpenseDebt',
             'Total Interest Expense',
             'Interest Expense',
+            'Interest income',
             'Interest expense, net',
         ]
 
@@ -372,8 +373,8 @@ engine = Engine(
     extensions=[CoreExtension()]
 )
 
-symbols = ('CDEV', 'MTDR', 'QEP', 'SM', 'NR', 'XOM', 'CVX', 'GEL', 'FET', 'CPE')
-#symbols = ('ABEPF', 'ARXRF', 'FTSSF', 'NMTLF', 'DCNNF', 'ALLIF', 'CCWOF', 'LTUM', 'FUSEF')
+#symbols = ('CDEV', 'MTDR', 'QEP', 'SM', 'NR', 'XOM', 'CVX', 'GEL', 'FET', 'CPE')
+symbols = ('ABEPF', 'ARXRF', 'FTSSF', 'NMTLF', 'DCNNF', 'ALLIF', 'CCWOF', 'LTUM', 'FUSEF')
 target = f'/home/pnaudus/Downloads/{datetime.date.today()} - Comparative analysis of {"-".join(symbols)}.html'
 with open(target, 'w') as f:
     f.write(

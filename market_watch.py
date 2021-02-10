@@ -40,7 +40,7 @@ class Filing:
     def _parse_record(self, key: str, value: str) -> list:
 
         if value == '-':
-            return key, Value(key, 0)
+            return key, Value(key, [0])
 
         multiplier = 1
 

@@ -180,9 +180,8 @@ def _process_financial_info(financial_html_text):
                 processed_financial_value = _process_financial_value(info_text, xbrl_element, unit_text)
 
             elif 'text' in class_list:
-                if numeric_data_available:
-                    # this corner case occurs when a given element appears sparsely (e.g. not collected in every period)
-                    processed_financial_value = _process_financial_value(info_text, xbrl_element, unit_text)
+                # this corner case occurs when a given element appears sparsely (e.g. not collected in every period)
+                processed_financial_value = _process_financial_value(info_text, xbrl_element, unit_text)
                 # else:
                 # 	# super label (abstract - no financial data)
                 # 	print(xbrl_element)
