@@ -1,0 +1,24 @@
+[tool.poetry]
+name = "marketthingy"
+version = "0.1.0"
+description = "Powerful tools to help you analyze the stock market"
+authors = ["Peter Naudus"]
+license = "GNU GPLv3"
+
+[tool.poetry.dependencies]
+python = "^3.9"
+yahoo-finance = "^1.4.0"
+"wheezy.template" = "^3.0.3"
+lxml = "^4.6.2"
+pandas = "1.2.1"
+requests = "2.25.1"
+bs4 = "0.0.1"
+"CacheControl[filecache]" = "0.12.6"
+
+[tool.poetry.dev-dependencies]
+jupytext = "^1.9.1"
+sec-edgar-financials = {path = "sec-edgar-financials"}
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
