@@ -17,9 +17,19 @@
     <script type="text/javascript">
         $(document).ready(function() {
             $('.sparkline').sparkline('html', {type: 'bar', barWidth: 10, barSpacing: 1});
-            $('table').DataTable({
+            $('table.facts').DataTable({
                 colReorder: true,
                 rowReorder: {selector: 'tr'},
+                saveState: true,
+                ordering: false,
+                paging: false,
+                searching: false,
+            });
+            $('table.ratios').DataTable({
+                colReorder: true,
+                rowReorder: {selector: 'tr'},
+                saveState: true,
+                ordering: true,
                 paging: false,
                 searching: false,
             });
@@ -47,7 +57,7 @@
   <main>
       @def content():
         <h1>Facts</h1>
-        <table>
+        <table class="facts">
             <thead>
                 <tr>
                     <td></td>
@@ -84,7 +94,7 @@
                 </ul>
             </blockquote>
 
-            <table>
+            <table class="ratios">
                 <thead>
                     <tr>
                         <td></td>
@@ -119,7 +129,7 @@
                 </ul>
             </blockquote>
 
-            <table>
+            <table class="ratios">
                 <thead>
                     <tr>
                         <td></td>
@@ -154,7 +164,7 @@
                 </ul>
             </blockquote>
 
-            <table>
+            <table class="ratios">
                 <thead>
                     <tr>
                         <td></td>
