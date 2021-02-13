@@ -20,9 +20,10 @@ class FinancialElement:
     Models financial elements
     '''
 
-    def __init__(self, labels: list, values: list):
+    def __init__(self, labels: list, values: list, values_raw: list):
         self.labels = labels
         self.values = values
+        self.values_raw = values_raw
 
     def __repr__(self):
         return str(self.__dict__)
@@ -195,10 +196,11 @@ def _process_financial_info(financial_html_text):
                 if xbrl_element not in financial_info_map:
                     # handles adjustment details
                     # e.g. https://www.sec.gov/Archives/edgar/data/867773/0000867773-18-000082.txt
-                    financial_info_map[xbrl_element] = FinancialElement([], [])
+                    financial_info_map[xbrl_element] = FinancialElement([], [], [])
 
                 financial_info_map[xbrl_element].labels.append(label)
                 financial_info_map[xbrl_element].values.append(processed_financial_value)
+                financial_info_map[xbrl_element].values_raw.append(processed_financial_value)
 
     # clean reports
     # colspans sometimes cause duplicate reports with empty maps

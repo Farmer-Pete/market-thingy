@@ -8,12 +8,16 @@ license = "GNU GPLv3"
 [tool.poetry.dependencies]
 python = "^3.9"
 yahoo-finance = "^1.4.0"
-"wheezy.template" = "^3.0.3"
 lxml = "^4.6.2"
 pandas = "1.2.1"
 requests = "2.25.1"
 bs4 = "0.0.1"
 CacheControl = {version="0.12.6", extras=["filecache"]}
+py_expression_eval = "^0.3.11"
+icecream = "^2.1.0"
+transitions = "^0.8.6"
+xmltodict = "^0.12.0"
+mako = "^1.1.4"
 
 [tool.poetry.dev-dependencies]
 jupytext = "^1.9.1"

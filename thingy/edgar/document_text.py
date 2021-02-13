@@ -1,9 +1,10 @@
 from bs4 import BeautifulSoup
-from edgar.dtd import DTD
+from thingy.edgar.dtd import DTD
 
 
 # according to the EDGAR SGML specs, DOCUMENT.TEXT has the following children
 attrs = ['pdf', 'xml', 'xbrl', 'table', 'caption', 'stub', 'column', 'footnotes_section']
+
 
 class DocumentText:
     '''
@@ -24,7 +25,7 @@ class DocumentText:
         for attr in attrs:
             tag = getattr(self.dtd, attr).tag
 
-            if type(data) is dict and tag in data:
+            if isinstance(data, dict) and tag in data:
                 value = data[tag]
 
                 if attr == 'xml':

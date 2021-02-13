@@ -1,0 +1,308 @@
+<?xml version="1.0"?>
+<root>
+<facts>
+
+    <groups>
+        <group id='big_picture'>Big Picture</group>
+        <group id='balance_sheet'>Balance Sheet</group>
+    </groups>
+
+
+    <fact id='total_assets' group='big_picture'>
+        <query source='balance_sheet' mode='select'>
+            us-gaap_Assets
+            Total Assets
+        </query>
+    </fact>
+
+    <fact id='total_equity' group='big_picture' label="Total (Shareholder's) Equity">
+        <eval>total_assets - total_liabilities</eval>
+    </fact>
+
+
+    <fact id='total_liabilities' group='big_picture'>
+        <query source='balance_sheet' mode='select'>
+            us-gaap_Liabilities
+            Total Liabilities
+        </query>
+        <query source='balance_sheet' mode='select'>
+            us-gaap_LiabilitiesCurrent
+            us-gaap_LiabilitiesNoncurrent
+        </query>
+        <query source='balance_sheet' mode='regexp' post='sum'>
+            .*LiabilitiesCurrent.*
+            .*LiabilitiesNoncurrent.*
+            .*DebtCurrent.*
+            .*DebtNoncurrent.*
+        </query>
+    </fact>
+
+
+    <fact id='current_assets' group='big_picture'>
+        <query source='balance_sheet' mode='select'>
+            us-gaap_AssetsCurrent
+            Total Current Assets
+        </query>
+    </fact>
+
+
+    <fact id='current_equity' group='big_picture'>
+        <eval>current_assets - current_liabilities</eval>
+    </fact>
+
+
+    <fact id='current_liabilities' group='big_picture'>
+        <query source='balance_sheet' mode='select'>
+            us-gaap_LiabilitiesCurrent
+            Total Current Liabilities
+        </query>
+    </fact>
+
+
+    <fact id='non_current_liabilities' group='big_picture'>
+        <eval>total_liabilities - current_liabilities</eval>
+    </fact>
+
+
+    <fact id='cash_and_cash_equivalents' group='balance_sheet'>
+        <query source='balance_sheet' mode='select'>
+            us-gaap_Cash
+            Cash
+            Cash and cash equivalents
+            Cash &amp; Short Term Investments
+        </query>
+    </fact>
+
+
+    <fact id='long_term_debt' group='balance_sheet'>
+        <query source='balance_sheet' mode='select'>
+            Long-term debt
+            us-gaap_LongTermDebt
+            us-gaap_LongTermDebtAndCapitalLeaseObligations
+        </query>
+        <query source='balance_sheet' mode='select' post='sum'>
+            us-gaap_LongTermDebtNoncurrent
+            us-gaap_LongTermLineOfCredit
+            us-gaap_SecuredLongTermDebt
+            us-gaap_SeniorLongTermNotes
+            us-gaap_UnsecuredLongTermDebt
+        </query>
+        <query source='balance_sheet' mode='regexp' post='static' value='0'>
+            '^(?:(?!longterm).)*$' <!-- "longterm" should not be found -->
+        </query>
+    </fact>
+
+
+    <fact id='retained_earnings' group='balance_sheet'>
+        <query source='balance_sheet' mode='select'>
+            Retained Earnings
+            us-gaap_RetainedEarningsAccumulatedDeficit
+        </query>
+        <query source='balance_sheet' mode='regexp' post='static' value='0'>
+            '^(?:(?!earnings).)*$' <!-- "earnings" should not be found -->
+        </query>
+    </fact>
+
+
+    <fact id='operating_income' group='income'>
+        <query source='income_statements' mode='select'>
+            us-gaap_OperatingIncomeLoss
+            us-gaap_Revenues
+            Operating Income
+        </query>
+        <query source='cash_flow' mode='select'>
+            Net Operating Cash Flow
+        </query>
+    </fact>
+
+
+    <fact id='operating_expenses' group='income'>
+        <query source='income_statements' mode='select'>
+            us-gaap_OperatingExpenses
+            us-gaap_CostsAndExpenses
+            us-gaap_SellingGeneralAndAdministrativeExpense
+        </query>
+    </fact>
+
+
+    <fact id='interest_expenses' group='income'>
+        <query source='income_statements' mode='select'>
+            us-gaap_InterestExpense
+            us-gaap_InterestExpenseDebt
+            Total Interest Expense
+            Interest Expense
+            Interest income
+            Interest expense, net
+        </query>
+    </fact>
+
+    <fact id='net_income' group='income'>
+        <query source='cash_flow' mode='select'>
+            us-gaap_NetIncomeLoss
+            us-gaap_ProfitLoss
+        </query>
+        <query source='income_statements' mode='select'>
+            us-gaap_NetIncomeLoss
+            Net Income
+        </query>
+    </fact>
+
+
+    <fact id='diluted_income_per_share' group='income'>
+        <query source='income_statements' mode='select'>
+            us-gaap_EarningsPerShareDiluted
+            us-gaap_NetIncomeLossPerOutstandingLimitedPartnershipAndGeneralPartnershipUnitBasicAndDiluted
+        </query>
+    </fact>
+</facts>
+
+
+<ratios>
+
+    <groups>
+        <group id='liquidity'>Liquidity and Effeciency</group>
+        <group id='solvency'>Solvency</group>
+        <group id='profitability'>Profitability</group>
+    </groups>
+
+    <ratio id='current_ratio' group='liquidity'>
+        <compute source.a='current_assets' source.b='current_liabilities'/>
+        Short-term debt-paying ability
+    </ratio>
+
+    <ratio id='cash_ratio' group='liquidity'>
+        <compute source.a='cash_and_cash_equivalents' source.b='current_liabilities'/>
+        Ability of a company to pay off short-term liabilities with cash
+    </ratio>
+
+    <ratio id='asset_turnover' group='liquidity'>
+        <compute source.a='operating_income' source.b='total_assets'/>
+        Effeciency of assets in producing income
+    </ratio>
+
+    <ratio id='debt_ratio' group='solvency'>
+        <compute source.a='total_liabilities' source.b='total_assets'/>
+        Owner financing
+    </ratio>
+
+    <ratio id='debt_to_equity' group='solvency'>
+        <compute source.a='total_liabilities' source.b='total_equity'/>
+        Weight of total debt and finantial liabilities against shareholder's equity
+    </ratio>
+
+    <ratio id='equity_ratio' group='solvency'>
+        <compute source.a='total_equity' source.b='total_assets'/>
+        Debt versus equity financing
+    </ratio>
+
+    <ratio id='times_interest_earned' group='solvency'>
+        <compute source.a='net_income' source.b='interest_expenses'/>
+        Projection in meeting interest payments
+    </ratio>
+
+    <ratio id='profit_margin_ratio' group='profitability'>
+        <compute source.a='net_income' source.b='operating_income'/>
+        Net income in each sales dollar
+    </ratio>
+
+    <ratio id='gross_margin_ratio' group='profitability'>
+        <compute source.a='operating_income - operating_expenses' source.b='operating_income'/>
+        Gross margin in each dollar sold
+    </ratio>
+
+    <ratio id='return_on_total_assets' group='profitability'>
+        <compute source.a='net_income' source.b='total_assets'/>
+        Overall profitability of assets
+    </ratio>
+
+</ratios>
+
+<machine>
+    <initial>Starting</initial>
+
+    <states>Starting</states>
+    <states>ProcessingGroup_Fact</states>
+    <states>ProcessingGroup_Ratio</states>
+    <states>ProcessingSymbol</states>
+    <states>ProcessingSymbol_Date</states>
+    <states>ProcessingSymbol_Date_Fact</states>
+    <states>ProcessingSymbol_Date_Fact_Eval</states>
+    <states>ProcessingSymbol_Date_Fact_DeferredEval</states>
+    <states>ProcessingSymbol_Date_Fact_Query</states>
+    <states>ProcessingSymbol_Date_Ratio</states>
+    <states>End</states>
+
+    <transitions>
+        <trigger>START</trigger>
+        <source>Starting</source>
+        <source>End</source>
+        <dest>Starting</dest>
+    </transitions>
+
+    <transitions>
+        <trigger>GROUP</trigger>
+        <source>Starting</source>
+        <source>ProcessingGroup</source>
+        <dest>ProcessingGroup_Fact</dest>
+        <conditions>group_is_fact_group</conditions>
+    </transitions>
+
+    <transitions>
+        <trigger>GROUP</trigger>
+        <source>Starting</source>
+        <source>ProcessingGroup</source>
+        <dest>ProcessingGroup_Ratio</dest>
+    </transitions>
+
+    <transitions>
+        <trigger>SYMBOL</trigger>
+        <source>ProcessingGroup</source>
+        <source>ProcessingSymbol</source>
+        <dest>ProcessingSymbol</dest>
+    </transitions>
+
+    <transitions>
+        <trigger>DATE</trigger>
+        <source>ProcessingSymbol</source>
+        <dest>ProcessingSymbol_Date</dest>
+    </transitions>
+
+    <transitions>
+        <trigger>FACT</trigger>
+        <source>ProcessingSymbol_Date</source>
+        <dest>ProcessingSymbol_Date_Fact</dest>
+    </transitions>
+
+    <transitions>
+        <trigger>EVAL</trigger>
+        <source>ProcessingSymbol_Date_Fact</source>
+        <dest>ProcessingSymbol_Date_Fact_Eval</dest>
+        <conditions>fact_eval_has_prerequisites</conditions>
+    </transitions>
+
+    <transitions>
+        <trigger>EVAL</trigger>
+        <source>ProcessingSymbol_Date_Fact</source>
+        <dest>ProcessingSymbol_Date_Fact_DeferredEval</dest>
+    </transitions>
+
+    <transitions>
+        <trigger>QUERY</trigger>
+        <source>ProcessingSymbol_Date_Fact</source>
+        <dest>ProcessingSymbol_Date_Fact_Query</dest>
+    </transitions>
+
+    <transitions>
+        <trigger>RATIO</trigger>
+        <source>ProcessingSymbol_Date</source>
+        <dest>ProcessingSymbol_Date_Ratio</dest>
+    </transitions>
+
+    <transitions>
+        <trigger>END</trigger>
+        <source>ProcessingSymbol</source>
+        <dest>End</dest>
+    </transitions>
+
+</machine>
+</root>

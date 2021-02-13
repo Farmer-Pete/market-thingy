@@ -2,7 +2,7 @@ import datetime
 import pandas
 import dateutil.parser
 from bs4 import BeautifulSoup
-from edgar.requests_wrapper import GetRequest
+from thingy.edgar.requests_wrapper import GetRequest
 from dataclasses import dataclass
 
 
