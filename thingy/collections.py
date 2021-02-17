@@ -1,6 +1,8 @@
 from __future__ import annotations
 import re
-from thingy.edgar.financials import FinancialInfo
+from thingy.edgar.financials import FinancialInfo as EdgarFinancialInfo
+from thingy.edgar.filing import Filing as EdgarFiling
+from thingy.market_watch import FinancialInfo as MarketWatchFinancialInfo, Filing as MarketWatchFiling
 from typing import Union, Optional
 from dataclasses import dataclass
 
@@ -15,11 +17,11 @@ class Date:
 
 
 class FallThruDict(dict):
-    def __init__(self, source: FinancialInfo):
+    def __init__(self, source: Union[EdgarFinancialInfo, MarketWatchFinancialInfo], period: str):
         self._months = source.months
         self._factor = 1
 
-        if self._months:
+        if self._months and period == 'quarterly':
             self._factor = source.months / 3
 
         super().__init__(source.map)
@@ -98,23 +100,35 @@ class Report:
     income_statements: FallThruDict
 
     @classmethod
-    def new(cls, filing) -> Report:
+    def new(cls, filing: Union[EdgarFiling, MarketWatchFiling], period: str) -> Report:
         return cls(
             balance_sheet=FallThruDict(
-                cls.get_recent_quarterly_report(filing.get_balance_sheets().reports)),
+                cls.get_recent_report(filing.get_balance_sheets().reports, period),
+                period),
             cash_flow=FallThruDict(
-                cls.get_recent_quarterly_report(filing.get_cash_flows().reports)),
+                cls.get_recent_report(filing.get_cash_flows().reports, period),
+                period),
             income_statements=FallThruDict(
-                cls.get_recent_quarterly_report(filing.get_income_statements().reports)))
+                cls.get_recent_report(filing.get_income_statements().reports, period),
+                period))
 
     @staticmethod
-    def get_recent_quarterly_report(reports: list) -> FinancialInfo:
-        for months in (3, 6, 9, None):
+    def get_recent_report(reports: list[Union[EdgarFinancialInfo, MarketWatchFinancialInfo]],
+                          period: str) -> Union[EdgarFinancialInfo, MarketWatchFinancialInfo]:
+
+        if period == 'annual':
+            month_specs = (12, None)
+        elif period == 'quarterly':
+            month_specs = (3, 6, 9, None)
+        else:
+            raise ValueError(f'Unknown period: {period}')
+
+        for months in month_specs:
             selected_reports = [(report.date, idx)
                                 for idx, report in enumerate(reports)
                                 if report.months == months]
             if selected_reports:
                 date, idx = max(selected_reports)
                 return reports[idx]
-        breakpoint()
+
         raise ValueError('Not able to find any reports')

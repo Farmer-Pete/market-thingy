@@ -299,7 +299,9 @@ def _process_period(info_text):
 
     :param info_text: a reporting period, e.g. "12 Months Ended"
     '''
-    return int(re.sub('[^0-9]', '', info_text))
+    if info_text:
+        return int(re.sub('[^0-9]', '', info_text))
+    return 0
 
 
 def _process_xbrl_element(info):

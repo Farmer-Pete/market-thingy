@@ -4,17 +4,12 @@ import yaml
 import xmltodict
 import lxml.etree
 import mako.exceptions
-from typing import Union, List, Dict, Any
+from typing import Union, Any
 from thingy.edgar.stock import Stock as EdgarStock
-from thingy.edgar.filing import Filing as EdgarFiling
 from thingy.market_watch import Stock as MarketWatchStock
-from thingy.market_watch import Filing as MarketWatchFiling
-from dataclasses import dataclass
 from transitions.core import EventData
 from lxml.objectify import ObjectifiedElement
 from icecream import ic
-from collections import defaultdict
-from thingy.collections import FallThruDict
 from thingy.collections import Report, Date
 from thingy.state import State, DeferredEval, ResultKey
 from thingy.metric_handlers import Fact, Ratio
@@ -23,7 +18,7 @@ from mako.template import Template
 
 
 class Engine(Machine):
-    def __init__(self, symbols: List[str], logic: ObjectifiedElement, template_engine: Template):
+    def __init__(self, symbols: list[str], logic: ObjectifiedElement, template_engine: Template):
         self.context = State()
         self.symbols = symbols
         self.logic = logic
@@ -37,31 +32,37 @@ class Engine(Machine):
             )['machine']
         )
 
-    def execute(self, dates: List[Date], period: str = 'annual') -> Engine:
-        dates = sorted(dates)
+    def execute(self, dates: dict[str, Date]) -> Engine:
+        dates = {period: sorted(date_list)
+                 for period, date_list in dates.items()}
         ic(dates)
-        self.START(period=period, dates=dates)
+
+        self.START(dates=dates)
 
         for group in itertools.chain(self.logic.facts.groups.group,
                                      self.logic.ratios.groups.group):
             self.GROUP(group=group)
 
-        for symbol in self.context.metadata.symbols:
-            self.SYMBOL(symbol=symbol)
+        for period, date_list in dates.items():
 
-            for date in dates:
-                self.DATE(date=date)
+            self.PERIOD(period=period)
 
-                for fact in self.logic.facts.fact:
-                    self.FACT(fact=fact)
-                    if hasattr(fact, 'eval'):
-                        self.EVAL(eval=fact.eval)
-                    if hasattr(fact, 'query'):
-                        for query in fact.query:
-                            self.QUERY(query=query)
+            for symbol in self.context.metadata.symbols:
+                self.SYMBOL(symbol=symbol)
 
-                for ratio in self.logic.ratios.ratio:
-                    self.RATIO(ratio=ratio)
+                for date in date_list:
+                    self.DATE(date=date)
+
+                    for fact in self.logic.facts.fact:
+                        self.FACT(fact=fact)
+                        if hasattr(fact, 'eval'):
+                            self.EVAL(eval=fact.eval)
+                        if hasattr(fact, 'query'):
+                            for query in fact.query:
+                                self.QUERY(query=query)
+
+                    for ratio in self.logic.ratios.ratio:
+                        self.RATIO(ratio=ratio)
         self.END()
 
         return self
@@ -89,7 +90,6 @@ class Engine(Machine):
         del self.context
         self.context = State()
         self.context.metadata.symbols = self.symbols
-        self.context.period = event.kwargs['period']
         self.context.metadata.dates = event.kwargs['dates']
 
     def on_enter_ProcessingGroup_Fact(self, event: EventData):
@@ -103,6 +103,9 @@ class Engine(Machine):
         result = [Ratio(ratio) for ratio in self.logic.ratios.ratio
                   if ratio.get('group') == group.get('id')]
         self.context.metadata.ratios[str(group)] = result
+
+    def on_enter_ProcessingPeriod(self, event: EventData):
+        self.context.period = event.kwargs['period']
 
     def on_enter_ProcessingSymbol(self, event: EventData):
         '''Store state for future use.'''
@@ -121,7 +124,11 @@ class Engine(Machine):
                                   self.context.date.year,
                                   self.context.date.quarter)
 
-        self.context.report = Report.new(filing)
+        try:
+            self.context.report = Report.new(filing, self.context.period)
+        except BaseException:
+            ic(self.context.key)
+            raise
 
     def on_exit_ProcessingSymbol_Date(self, event: EventData):
         '''Perform cleanup and validation.'''

@@ -223,6 +223,7 @@
     <states>Starting</states>
     <states>ProcessingGroup_Fact</states>
     <states>ProcessingGroup_Ratio</states>
+    <states>ProcessingPeriod</states>
     <states>ProcessingSymbol</states>
     <states>ProcessingSymbol_Date</states>
     <states>ProcessingSymbol_Date_Fact</states>
@@ -255,8 +256,15 @@
     </transitions>
 
     <transitions>
-        <trigger>SYMBOL</trigger>
+        <trigger>PERIOD</trigger>
         <source>ProcessingGroup</source>
+        <source>ProcessingSymbol</source>
+        <dest>ProcessingPeriod</dest>
+    </transitions>
+
+    <transitions>
+        <trigger>SYMBOL</trigger>
+        <source>ProcessingPeriod</source>
         <source>ProcessingSymbol</source>
         <dest>ProcessingSymbol</dest>
     </transitions>

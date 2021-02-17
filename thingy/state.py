@@ -27,7 +27,7 @@ class Metadata:
     facts: dict[str, list[Fact]]
     ratios: dict[str, list[Ratio]]
     symbols: list[str]
-    dates: list[Date]
+    dates: dict[str, Date]
 
     def __bool__(self):
         return all(self.__dict__.values())
