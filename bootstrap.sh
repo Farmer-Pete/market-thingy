@@ -6,7 +6,7 @@ set -x
 apt update
 apt install --yes software-properties-common mosh
 add-apt-repository --yes ppa:deadsnakes/ppa
-apt-get --yes install python3.9 python3.9-venv python3.9-disutils build-essential
+apt-get --yes install python3.9 python3.9-venv python3.9-distuils build-essential
 
 # Install Poetry
 curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python3.9 -
