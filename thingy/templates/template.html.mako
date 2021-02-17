@@ -103,7 +103,8 @@
                                     symbol=symbol,
                                     year=date.year,
                                     quarter=date.quarter)
-                            values.append(str(int(result[key].facts[fact.id])))
+                            if key in result:
+                              values.append(str(int(result[key].facts[fact.id])))
                         %>
                         ${','.join(values)}
                         </span>
@@ -166,11 +167,12 @@
                                     symbol=symbol,
                                     year=date.year,
                                     quarter=date.quarter)
-                            values.append(
-                              ':'.join((
-                                str(result[key].ratios[ratio.id].a),
-                                str(result[key].ratios[ratio.id].b)
-                              ))
+                            if key in result:
+                              values.append(
+                                ':'.join((
+                                  str(result[key].ratios[ratio.id].a),
+                                  str(result[key].ratios[ratio.id].b)
+                                ))
                             )
                           %>
                           ${','.join(values)}

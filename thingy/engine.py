@@ -15,6 +15,7 @@ from thingy.state import State, DeferredEval, ResultKey
 from thingy.metric_handlers import Fact, Ratio
 from transitions.extensions import HierarchicalMachine as Machine
 from mako.template import Template
+from thingy.edgar.stock import NoFilingInfoException
 
 
 class Engine(Machine):
@@ -33,8 +34,6 @@ class Engine(Machine):
         )
 
     def execute(self, dates: dict[str, Date]) -> Engine:
-        dates = {period: sorted(date_list)
-                 for period, date_list in dates.items()}
         ic(dates)
 
         self.START(dates=dates)
@@ -51,18 +50,23 @@ class Engine(Machine):
                 self.SYMBOL(symbol=symbol)
 
                 for date in date_list:
-                    self.DATE(date=date)
+                    try:
+                        self.DATE(date=date)
 
-                    for fact in self.logic.facts.fact:
-                        self.FACT(fact=fact)
-                        if hasattr(fact, 'eval'):
-                            self.EVAL(eval=fact.eval)
-                        if hasattr(fact, 'query'):
-                            for query in fact.query:
-                                self.QUERY(query=query)
+                        for fact in self.logic.facts.fact:
+                            self.FACT(fact=fact)
+                            if hasattr(fact, 'eval'):
+                                self.EVAL(eval=fact.eval)
+                            if hasattr(fact, 'query'):
+                                for query in fact.query:
+                                    self.QUERY(query=query)
 
-                    for ratio in self.logic.ratios.ratio:
-                        self.RATIO(ratio=ratio)
+                        for ratio in self.logic.ratios.ratio:
+                            self.RATIO(ratio=ratio)
+                    except NoFilingInfoException as e:
+                        ic(e)
+                        ic(self.context.key)
+                        print('WARNING: No filing found, skipping...')
         self.END()
 
         return self
@@ -88,9 +92,14 @@ class Engine(Machine):
     def on_enter_Starting(self, event: EventData):
         '''Clear and re-initialize state'''
         del self.context
+
+        dates = event.kwargs['dates']
+
         self.context = State()
         self.context.metadata.symbols = self.symbols
-        self.context.metadata.dates = event.kwargs['dates']
+        self.context.metadata.dates = dates = {
+            period: sorted(date_list)
+            for period, date_list in dates.items()}
 
     def on_enter_ProcessingGroup_Fact(self, event: EventData):
         group = event.kwargs['group']
@@ -113,6 +122,7 @@ class Engine(Machine):
 
     def on_enter_ProcessingSymbol_Date(self, event: EventData):
         '''Store date for future use and get associated filing'''
+
         self.context.date = event.kwargs['date']
 
         if len(self.context.symbol) <= 4:
@@ -124,11 +134,7 @@ class Engine(Machine):
                                   self.context.date.year,
                                   self.context.date.quarter)
 
-        try:
-            self.context.report = Report.new(filing, self.context.period)
-        except BaseException:
-            ic(self.context.key)
-            raise
+        self.context.report = Report.new(filing, self.context.period)
 
     def on_exit_ProcessingSymbol_Date(self, event: EventData):
         '''Perform cleanup and validation.'''

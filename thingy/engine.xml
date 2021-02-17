@@ -272,6 +272,7 @@
     <transitions>
         <trigger>DATE</trigger>
         <source>ProcessingSymbol</source>
+        <source>ProcessingSymbol_Date</source>
         <dest>ProcessingSymbol_Date</dest>
     </transitions>
 
